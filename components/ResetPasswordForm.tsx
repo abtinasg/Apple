@@ -1,0 +1,95 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import AbtinLogo from './AbtinLogo'
+import { resetPassword } from '@/lib/auth'
+
+export default function ResetPasswordForm() {
+  const router = useRouter()
+  const params = useSearchParams()
+  const token = params.get('token') ?? ''
+  const email = params.get('email') ?? ''
+
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+
+  const invalidLink = !token || !email
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
+    setLoading(true)
+    try {
+      await resetPassword(email, token, password)
+      setDone(true)
+      setTimeout(() => router.push('/login'), 1800)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not reset password.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="animate-fade-slide-up w-full max-w-[380px] mx-auto px-4">
+      <div className="glass-card rounded-2xl px-8 pt-10 pb-9 flex flex-col gap-6">
+        <div className="flex flex-col items-center gap-3">
+          <AbtinLogo size={52} />
+          <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-white/95">New Password</h1>
+          {email && <p className="text-[13px] text-apple-gray text-center">{email}</p>}
+        </div>
+
+        {invalidLink ? (
+          <p className="text-[13px] text-red-400/90 text-center">
+            This reset link is invalid or incomplete.
+          </p>
+        ) : done ? (
+          <p className="text-[14px] text-green-400 text-center">
+            Password updated. Redirecting to sign in…
+          </p>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <input
+              className="apple-input"
+              type="password"
+              autoComplete="new-password"
+              placeholder="New password (8+ characters)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
+            <input
+              className="apple-input"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Confirm new password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+              disabled={loading}
+            />
+            {error && <p className="text-[12px] text-red-400/90 text-center px-1">{error}</p>}
+            <button type="submit" disabled={!password || !confirm || loading} className="apple-btn-primary mt-1">
+              {loading ? 'Updating…' : 'Reset Password'}
+            </button>
+          </form>
+        )}
+
+        <p className="text-center text-[12px] text-apple-gray">
+          <Link href="/login" className="text-apple-blue hover:underline underline-offset-2">
+            Back to sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}

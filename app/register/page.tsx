@@ -1,10 +1,10 @@
-import LoginForm from '@/components/LoginForm'
+import RegisterForm from '@/components/RegisterForm'
 import AuthBackground from '@/components/AuthBackground'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <AuthBackground>
-      <LoginForm />
+      <RegisterForm />
     </AuthBackground>
   )
 }
